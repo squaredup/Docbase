@@ -6,50 +6,118 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a id="docs-appbase-logo" class="navbar-brand" href="/">
-      <img ng-src="{{logoSrc}}" />
+    <a id="docs-appbase-logo" class="navbar-brand" href="#/">
+      <img src="./images/logo.png" />
     </a>
   </div>
-
   <div class="collapse navbar-collapse" id="navbar-collapse">
-    <ul class="nav navbar-nav">
-      <li class="dropdown" ng-repeat="folder in map[currentVersion]">
-        <a ng-href="#/{{currentVersion}}/{{folder.name}}"
-           class="dropdown-toggle"
-           data-toggle="dropdown"
-           role="button"
-           aria-expanded="false"
-           ng-bind="folder.label"></a>
-        <ul class="dropdown-menu">
-          <li ng-repeat="file in folder.files">
-            <a ng-href="#/{{currentVersion}}/{{folder.name}}/{{file.name}}" ng-bind="file.label"></a>
-          </li>
-        </ul>
-      </li>
-    </ul>
-
-    <ul class="nav navbar-nav navbar-right">
-       <li class="dropdown search-dropdown">
-        <div class="form-group search-form">
-        </div>
-      </li>
-      <li class="dropdown">
-        <a href=""
-           class="dropdown-toggle"
-           data-toggle="dropdown"
-           role="button"
-           aria-expanded="false">
-           <span ng-bind="currentVersion"></span> <span class="caret"></span>
-        </a>
-        <ul class="dropdown-menu version-switcher" role="menu">
-          <li ng-repeat="version in versions">
-            <a ng-href="#/{{getVersionLink(version, map)}}" ng-bind="version"></a>
-          </li>
-        </ul>
-      </li>
-      <li class="github-star">
-        <iframe src="https://ghbtns.com/github-btn.html?user=appbaseio&repo=Docs&type=star&count=true" frameborder="0" scrolling="0" width="170px" height="20px"></iframe>
-      </li>
-    </ul>
+    <div class="pull-left  hidden-xs" id="folder-navbar">
+      <ul class="nav navbar-nav folder-li">
+	  
+		<script type="text/ng-template" id="navrenderer.html">
+			<a ng-href="{{path}}/{{file.files ? file.name + '/index' : file.name}}" title="{{file.label || file.name}}" ng-init="current=file">
+				{{file.label || file.name}}				
+			</a>
+			
+			<ul style="margin-left:30px;">
+				<li ng-repeat="file in file.files" data-ng-hide="file.name == 'index'" ng-init="path=path +'/' + current.name" ng-include="'navrenderer.html'"></li>
+			</ul>
+		</script>
+	  
+        <li class="dropdown" ng-repeat="folder in map[currentVersion]">
+          <a ng-href="#/{{currentVersion}}/{{folder.name}}/index"
+             class="dropdown-toggle map_folder"
+             data-toggle="dropdown"
+             role="button"
+             aria-expanded="false"
+             title="{{folder.label}}"
+             >
+            <span ng-bind="folder.label" class="link-restrict"></span>
+           </a>
+          <ul class="dropdown-menu">
+            <li ng-repeat="file in folder.files" ng-init="path='#/' + currentVersion + '/' + folder.name"data-ng-hide="file.name == 'index'" ng-include="'navrenderer.html'"></li>
+          </ul>
+        </li>
+      </ul>
+     
+    </div>
+    <div  class="pull-right" id="other-navs">
+      <ul class="nav navbar-nav navbar-right">
+         <li class="dropdown search-dropdown">
+          <div class="form-group search-form"  data-ng-class="{'open-in':search.length > 0}" >
+            <input data-ng-model="search" type="text" class="search_field form-control dropdown-toggle"
+               data-toggle="dropdown"
+               aria-expanded="false"
+               placeholder="search.." />
+          </div>
+        </li>
+        <li class="dropdown  hidden-xs">
+          <a href=""
+             class="dropdown-toggle"
+             data-toggle="dropdown"
+             role="button"
+             aria-expanded="false">
+             <span ng-bind="currentVersion"></span> <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu version-switcher" role="menu">
+            <li ng-repeat="version in versions">
+              <a ng-href="#/{{version}}" ng-bind="version"></a>
+            </li>
+          </ul>
+        </li>
+        <li>
+          <a href="http://support.squaredup.com" target="_blank">Support</a>
+        </li>
+      </ul>
+    </div>
+    <!-- Only for mobile view -->
+    <div class="mobile-nav visible-xs-block">
+      <ul class="nav navbar-nav">
+        <li class="dropdown col-xs-6 p-l-0">
+          <a href=""
+             class="dropdown-toggle"
+             data-toggle="dropdown"
+             role="button"
+             aria-expanded="false">
+             <span ng-bind="currentVersion"></span> <span class="caret"></span>
+          </a>
+          <ul class="dropdown-menu version-switcher" role="menu">
+            <li ng-repeat="version in versions">
+              <a ng-href="#/{{version}}" ng-bind="version"></a>
+            </li>
+          </ul>
+        </li>
+        <li>          
+          <a href="http://support.squaredup.com" target="_blank">Support</a>
+        </li>       
+        <li class="col-xs-12">
+          <ul class="nav navbar-nav">
+            <li class="dropdown menu-large">
+              <a class="dropdown-toggle pointer" data-toggle="dropdown">more <b class="caret"></b></a>
+              <ul class="dropdown-menu megamenu row">
+                <li class="col-sm-3 megamenu-item" ng-repeat="folder in map[currentVersion]">
+                  <ul>
+                    <li class="dropdown-header">
+                      <a ng-href="#/{{currentVersion}}/{{folder.name}}/index"
+                       class="map_folder"
+                       data-toggle="dropdown"
+                       role="button"
+                       aria-expanded="false"
+                       ng-bind="folder.label"
+                        title="{{folder.label}}">
+                      </a>
+                    </li>
+                    <li ng-repeat="file in folder.files" data-ng-hide="file.name == 'index'">
+                      <a ng-href="#/{{currentVersion}}/{{folder.name}}/{{file.name}}"
+                 title="{{file.label}}" ng-bind="file.label"></a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div><!-- /.Only for mobile view -->
   </div><!-- /.navbar-collapse -->
 </div><!-- /.container-fluid -->
