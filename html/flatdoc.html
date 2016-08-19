@@ -22,19 +22,24 @@
 	<div class="container">
 		<div class="row">
 			<h1 class="col-xs-12">
-				{{currentFolder}} ({{indexList.length - 1}} files)
+				{{currentFolder}} ({{indexList.length}} files)
 			</h1>
 		</div>	
+		
+		<script type="text/ng-template" id="link_renderer.html">
+			<a href="{{path}}/{{file.files ? file.name + '/index' : file.name}}" class="col-xs-12"> {{file.label || file.name}}</a>
+			<ul class="col-sm-12" ng-init="current=file">
+				<li ng-repeat="(key, file) in file.files" ng-include="'link_renderer.html'" ng-init="path=path +'/' + current.name"></li>
+			</ul>
+		</script>
+		
 		<div class="row indexLinkContainer">
 			<ul class="col-xs-12 col-sm-6">
-				<li class="col-xs-12" data-ng-repeat="(key, file) in indexList" data-ng-if="file.name != 'index' && (key+1) <= indexList.length/2">
-					<a href="#/{{currentVersion}}/{{currentFolder}}/{{file.name}}" class="col-xs-12"> {{file.name}}</a>
-				</li>
+				<li ng-repeat="(key, file) in indexList" ng-include="'link_renderer.html'" data-ng-if="file.name != 'index' && (key) <= indexList.length/2" ng-init="path='#/' + currentVersion + '/' + fullPath + folder.name"></li>
 			</ul>
-			<ul  class="col-xs-12 col-sm-6">
-				<li class="col-xs-12" data-ng-repeat="(key, file) in indexList" data-ng-if="file.name != 'index' && (key+1) > indexList.length/2">
-					<a href="#/{{currentVersion}}/{{currentFolder}}/{{file.name}}" class="col-xs-12"> {{file.name}}</a>
-				</li>
+			
+			<ul class="col-xs-12 col-sm-6">
+				<li ng-repeat="(key, file) in indexList" ng-include="'link_renderer.html'" data-ng-if="file.name != 'index' && (key) > indexList.length/2" ng-init="path='#/' + currentVersion + '/' + fullPath + folder.name"></li>
 			</ul>
 		</div>
 	</div>

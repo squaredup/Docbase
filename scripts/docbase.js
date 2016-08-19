@@ -272,7 +272,7 @@
     };
 
     $routeProvider
-      .when('/:version/:folder/:file', {
+      .when('/:version/:folder/:file*', {
         templateUrl: flatdocURL,
         controller: 'URLCtrl',
         resolve: resolve
@@ -378,10 +378,22 @@
         retObj.locationPath = location.path;
 
         //If index file
-
-        if ($route.current.params.file === 'index') {
+		var last, penultimate, parts;
+		if($route.current.params.file) {
+			parts = $route.current.params.file.split('/');
+			last = parts[parts.length - 1];
+			if(parts.length > 1) {
+				penultimate = parts[parts.length - 2];
+			}
+		}
+        if (last === 'index') {
           retObj.index = true;
-          retObj.currentFolder = $route.current.params.folder;
+          retObj.currentFolder = penultimate || $route.current.params.folder;
+		  if(penultimate) {
+			retObj.fullPath = $route.current.params.folder + '/' + parts.slice(0, -1).join('/');
+		  } else {
+			  retObj.fullPath = $route.current.params.folder + parts.slice(0, -1).join('/');
+		  }
           deferred.resolve(retObj);
         } else if (!location.fail) {
           var options = Docbase.options;
@@ -481,15 +493,24 @@
       $scope.navbarHtml = Docbase.options.navbarHtml;
       $scope.logoSrc = Docbase.options.logoSrc;
       $scope.docbaseOptions = Docbase.options;
+	  $scope.fullPath = data.fullPath;
 
       setTimeout(function(){
         $('#folder-navbar').megaMenu();
       },200);
 
+	  
       function versionIn(folder) {
         if (folder.name === data.currentFolder) {
           $scope.indexList = folder.files;
+		  return;//find first match (should really check exact path match)
         }
+		
+		if(folder.files) {
+			folder.files.forEach(function(file) {
+				versionIn(file);
+			});
+		}
       }
       //If index is true
       if (data.index) {
@@ -499,10 +520,11 @@
 
         for (var version in data.map) {
           if (version === data.currentVersion) {
-            if (data.map[version] !== null)
-              for (var j = 0; j < data.map[version].length; j++) {
-                versionIn(data.map[version][j]);
-              }
+            if (data.map[version] !== null) {              
+				for (var j = 0; j < data.map[version].length; j++) {
+					versionIn(data.map[version][j]);
+				}
+			}
           }
         }
       } else {
@@ -517,37 +539,6 @@
           jWindow.trigger('flatdoc:ready');
         }
 
-        var extra_container = $("<div>").addClass('extra_container');
-        if (commits.status == 200 && commits.data && commits.data.length) {
-          var commits_data = commits.data;
-          var commiter_data = $filter('date')(commits.data[0].commit.committer.date, 'mediumDate');
-          var last_date = $('<span>').addClass('pull-right modified-date').html('Last modified on: <a href="' + commits.data[0].html_url + '">' + commiter_data + '</a>');
-
-          var contributors_data = commits_data;
-          var contributors = $('<div>').addClass('contributor-container');
-          for (var i = 0; i < contributors_data.length; i++) {
-            var contributor_d = contributors_data[i].committer;
-            if (contributor_d && jQuery.inArray(contributor_d.login, contribut_array) == -1) {
-              contribut_array.push(contributor_d.login);
-              var contributor_img = $('<img>').addClass('contributor_img img-rounded').attr({
-                'src': contributor_d.avatar_url,
-                'alt': contributor_d.login
-              });
-              var contributor = $('<a>').addClass('contributor').attr({
-                'href': contributor_d.html_url,
-                'title': contributor_d.login,
-                'target': '_blank'
-              }).append(contributor_img);
-              contributors.append(contributor);
-            }
-          }
-          var contributors_header = $('<div>').addClass('contributors_header').append('Contributors').append(last_date);
-          var contributors_footer = $('<div>').addClass('contributors_header nobg').append("<a class='edit-btn' href='"+$scope.github+"' target='_blank'><span class='fa fa-pencil'> Edit this page on Github </span></a>");
-          $(extra_container).prepend(contributors_footer).prepend(contributors).prepend(contributors_header);
-        }
-
-        var div2 = $('<div>').addClass('clearFix');
-        $('[role="flatdoc-content"]').prepend(div2).prepend(extra_container);
       }
     }.bind(this), 0);
   };
@@ -649,17 +640,35 @@
       }
     }
     if (file) {
-      var mapFile = mapFolder[0].files.filter(function(files) {
-        return files.name === file;
-      });
-      if (!mapFile.length) {
-        console.error('File not mapped.');
-        return {
-          path: '/' + version + '/' + file,
-          fail: true
-        };
-      }
-    }
+		
+		var filesArr = file.split('/');
+		
+		var findFile = function(searchFolder, filename) {
+			if(searchFolder.files) {
+				var found = searchFolder.files.filter(function(item) {
+					if(item.name == filename) {
+						return true;
+					}
+					
+					if(item.files) {
+						return findFile(item, filename);
+					}
+				});
+				
+				return found;
+			}
+		};
+		
+		var mapFile = findFile(mapFolder[0], filesArr[filesArr.length - 1 ]);
+		
+		if (!mapFile.length) {
+			console.error('File not mapped.');
+			return {
+				path: '/' + version + '/' + file,
+				fail: true
+			};
+		}
+	}
 
     folder = folder || map[version][0].name;
     var folderObj = map[version].filter(function(each) {
@@ -683,57 +692,47 @@
       getLink: function(map, path) {
         var currentVersion = path.version;
         var currentMap = map[currentVersion];
-        var currentFolderKey,  currentFileKey, currentFolder;
-        currentMap.forEach(function(folder, folderKey) {
-          if (folder.name == path.folder) {
-            currentFolder = folder;
-            currentFolderKey = folderKey;
-            folder.files.forEach(function(files, fileKey) {
-              if (files.name == path.file) {
-                currentFileKey = fileKey;
-              }
-            });
-          }
-        });
-
-        var prevLink = function() {
-          var targetLink, targetFileKey, targetfolderKey, targetFolder;
-          if (currentFolderKey === 0 && currentFileKey === 0) {
-            targetLink = null;
-          } else {
-            if (currentFileKey === 0) {
-              targetfolderKey = currentFolderKey - 1;
-              targetFolder = map[currentVersion][targetfolderKey];
-              targetFileKey = targetFolder.files.length - 2;
-            } else {
-              targetFileKey = currentFileKey - 1;
-              targetFolder = currentFolder;
-            }
-            targetLink = '#/' + currentVersion + '/' + targetFolder.name + '/' + targetFolder.files[targetFileKey].name;
-          }
-          return targetLink;
-        };
-
-        var nextLink = function() {
-          var targetLink, targetFileKey, targetfolderKey, targetFolder;
-          if (currentFolderKey === map[currentVersion].length - 1 && currentFileKey === map[currentVersion][currentFolderKey].files.length - 2) {
-            targetLink = null;
-          } else {
-            if (currentFileKey === map[currentVersion][currentFolderKey].files.length - 2) {
-              targetfolderKey = currentFolderKey + 1;
-              targetFolder = map[currentVersion][targetfolderKey];
-              targetFileKey = 0;
-            } else {
-              targetFileKey = currentFileKey + 1;
-              targetFolder = currentFolder;
-            }
-            targetLink = '#/' + currentVersion + '/' + targetFolder.name + '/' + targetFolder.files[targetFileKey].name;
-          }
-          return targetLink;
-        };
+		
+		var currentFile = path.file.split('/');
+		currentFile = currentFile[currentFile.length - 1];
+		var next, prev;
+		
+		var recursiveFind = function(searchFolder, needle, currentPath) {
+			searchFolder.files.some(function(file, key) {
+				if(file.name == needle) { //find the deepest (if duplicate) && level > foundAt
+					if(searchFolder.files[key + 1]) {								
+						next = currentPath + searchFolder.files[key + 1].name;
+					} else {
+						next = currentPath + "index";
+					}
+					
+					if(searchFolder.files[key - 1]) {								
+						prev = currentPath + searchFolder.files[key - 1].name;
+					} else {
+						prev = currentPath + "index";
+					}
+					return true;
+				}
+				if(file.files && file.name != needle) {
+					currentPath = currentPath + file.name + "/";
+					recursiveFind(file, needle, currentPath);
+				}
+			});					
+		};
+				
+		var buildPath = "#/" + currentVersion + "/";	
+		
+		//iterate over folders
+		currentMap.forEach(function(folder, folderKey) {
+			if(folder.name == path.folder) { //current folder
+				buildPath = buildPath + folder.name + "/";
+				recursiveFind(folder, currentFile, buildPath);				
+			}			
+		});
+		
         var paginationLinks = {
-          'prev': prevLink(),
-          'next': nextLink()
+          'prev': prev,
+          'next': next
         };
 
         return paginationLinks;
