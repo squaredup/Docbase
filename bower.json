@@ -1,12 +1,13 @@
 {
-  "name": "docbase",
+  "name": "squaredup-docbase",
   "version": "0.2.60",
-  "homepage": "https://github.com/appbaseio/Docbase",
+  "homepage": "https://github.com/squaredup/Docbase",
   "authors": [
+	"Dave Clarke <dave.clarke@squaredup.com>",
     "Henrique Sa <henriquepss@gmail.com>",
     "Mateus Freira <mateus.freira@gmail.com>"
   ],
-  "description": "A fast and flexible single-page documentation engine",
+  "description": "A fast and flexible single-page documentation engine. Originally forked from Docbase.",
   "license": "MIT",
   "ignore": [
     "**/.*",
