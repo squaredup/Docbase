@@ -587,7 +587,6 @@
   };
   Route.VersionCtrl = function($scope, $route, $location, $filter, $timeout, $rootScope) {
     $scope.docbaseOptions = Docbase.options;
-
     if (Docbase.options.indexType === 'markdown') {
       var path = Docbase.options.indexSrc;
       if (endsWith(path, '.md')) {
@@ -706,23 +705,31 @@
 		
 		var recursiveFind = function(searchFolder, needle, currentPath) {
 			searchFolder.files.some(function(file, key) {
-				if(file.name == needle) { //find the deepest (if duplicate) && level > foundAt
-					if(searchFolder.files[key + 1]) {								
-						next = currentPath + searchFolder.files[key + 1].name;
+				if(file.name == needle) { 
+					if(searchFolder.files[key + 1]) {
+						if(searchFolder.files[key+1].files) {
+							next = currentPath + searchFolder.files[key + 1].name + "/index";
+						} else {
+							next = currentPath + searchFolder.files[key + 1].name;
+						}
 					} else {
 						next = currentPath + "index";
 					}
 					
-					if(searchFolder.files[key - 1]) {								
-						prev = currentPath + searchFolder.files[key - 1].name;
+					if(searchFolder.files[key - 1]) {
+						if(searchFolder.files[key-1].files) {
+							prev = currentPath + searchFolder.files[key - 1].name + "/index";
+						} else {
+							prev = currentPath + searchFolder.files[key - 1].name;
+						}		
 					} else {
 						prev = currentPath + "index";
 					}
 					return true;
 				}
 				if(file.files && file.name != needle) {
-					currentPath = currentPath + file.name + "/";
-					recursiveFind(file, needle, currentPath);
+					var folderPath = currentPath + file.name + "/";
+					recursiveFind(file, needle, folderPath);
 				}
 			});					
 		};
@@ -731,6 +738,7 @@
 		
 		//iterate over folders
 		currentMap.forEach(function(folder, folderKey) {
+			debugger;
 			if(folder.name == path.folder) { //current folder
 				buildPath = buildPath + folder.name + "/";
 				recursiveFind(folder, currentFile, buildPath);				
@@ -879,7 +887,7 @@
     .service('Pagination', [Route.pagination])
     .controller('URLCtrl', ['$scope', '$route', '$location', '$filter', 'data', 'commits', '$timeout', 'Pagination', Route.URLCtrl])
     .controller('VersionCtrl', ['$scope', '$route', '$location', '$filter', '$timeout', '$rootScope', Route.VersionCtrl])
-    .controller('MainCtrl', ['$scope', '$location', '$timeout', '$rootScope', Route.mainCtrl])
+    .controller('MainCtrl', ['$scope', '$location', '$timeout', '$rootScope', Route.mainCtrl])	
     .config(['$routeProvider', '$locationProvider', Route.config])
     .run(
       ['$rootScope', '$location', '$routeParams', '$anchorScroll',
