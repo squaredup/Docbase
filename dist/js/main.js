@@ -1,3 +1,30 @@
+
+// FILE: scripts/docbase-html-mode.js
+/**
+ *
+ * Docbase engine
+ * Appbase
+ * MIT license
+ */
+
+(function($, angular) {
+    /*
+     * Scrollspy.
+     */
+    $(function() {
+        $("h2, h3").scrollagent(function(cid, pid, currentElement, previousElement) {
+            if (pid) {
+                $("[pref='#" + pid + "']").removeClass('active');
+            }
+            if (cid) {
+                $("[pref='#" + cid + "']").addClass('active');
+            }
+        });
+    });
+})(window.jQuery, window.angular);
+
+
+// FILE: scripts/docbase.js
 /**
  *
  * Docbase engine
@@ -894,3 +921,494 @@
       ]
     );
 })(window.jQuery, window.angular, window.docbaseConfig);
+
+
+// FILE: scripts/flatdoc-theme.js
+/**
+ * Official flatdoc theme
+ * modified
+ */
+
+(function($) {
+  var $window = $(window);
+  var $document = $(document);
+
+  $window.on('docbase:ready', runTheme);
+
+  function runTheme() {
+
+    $("h2, h3").scrollagent({
+      offset: 100
+    }, function(cid, pid, currentElement, previousElement) {
+      if (pid) {
+        $("[pref='#" + pid + "']").removeClass('active');
+      }
+      if (cid) {
+        $("[pref='#" + cid + "']").addClass('active');
+      }
+    });
+
+    $('.menu a').each(function() {
+      var el = $(this);
+      var href = el.attr('href');
+
+      if (href && !el.attr('pref')) {
+        var location = window.location.href.split('#');
+        if (location.length <= 2) {
+          location = location.join('#') + href;
+        } else {
+          location[location.length - 1] = href.substring(1);
+          location = location.join('#');
+        }
+        el.attr('href', location);
+        el.attr('pref', href);
+      }
+    });
+
+    var $sidebar = $('.menubar');
+    var elTop;
+
+    $window
+      .on('resize.sidestick', function() {
+        $sidebar.removeClass('fixed');
+        elTop = $sidebar.offset().top;
+        $window.trigger('scroll.sidestick');
+      })
+      .on('scroll.sidestick', function() {
+        var scrollY = $window.scrollTop();
+        $sidebar.toggleClass('fixed', (scrollY >= elTop - 35));
+      })
+      .trigger('resize.sidestick');
+
+  }
+
+})(window.jQuery);
+
+
+/*! jQuery.scrollagent (c) 2012, Rico Sta. Cruz. MIT License.
+ *  https://github.com/rstacruz/jquery-stuff/tree/master/scrollagent */
+
+// Call $(...).scrollagent() with a callback function.
+//
+// The callback will be called everytime the focus changes.
+//
+// Example:
+//
+//      $("h2").scrollagent(function(cid, pid, currentElement, previousElement) {
+//        if (pid) {
+//          $("[href='#"+pid+"']").removeClass('active');
+//        }
+//        if (cid) {
+//          $("[href='#"+cid+"']").addClass('active');
+//        }
+//      });
+
+(function($) {
+
+  $.fn.scrollagent = function(options, callback) {
+    var $window = $(window);
+
+    // Account for $.scrollspy(function)
+    if (typeof callback === 'undefined') {
+      callback = options;
+      options = {};
+    }
+
+    var $sections = $(this);
+    var $parent = options.parent || $(window);
+
+    // Find the top offsets of each section
+    var offsets = [];
+    $sections.each(function(i) {
+      var offset = ($(this).attr('data-anchor-offset') ?
+        parseInt($(this).attr('data-anchor-offset'), 10) :
+        (options.offset || 0));
+
+      offsets.push({
+        id: $(this).attr('id'),
+        index: i,
+        el: this,
+        offset: offset
+      });
+    });
+
+    // State
+    var current = null;
+    var height = null;
+    var range = null;
+
+    // Save the height. Do this only whenever the window is resized so we don't
+    // recalculate often.
+    function refreshSize() {
+      height = $parent.height();
+      range = $(document).height();
+    }
+
+    // Find the current active section every scroll tick.
+    function refreshScroll() {
+      var y = $parent.scrollTop();
+      y += height * (0.3 + 0.7 * Math.pow(y / range, 2));
+
+      var latest = null;
+
+      for (var i in offsets) {
+        if (offsets.hasOwnProperty(i)) {
+          var offset = offsets[i];
+          if ($(offset.el).offset().top + offset.offset < y) latest = offset;
+        }
+      }
+
+      if (latest && (!current || (latest.index !== current.index))) {
+        callback.call($sections,
+          latest ? latest.id : null,
+          current ? current.id : null,
+          latest ? latest.el : null,
+          current ? current.el : null);
+        current = latest;
+      }
+    }
+
+    $window.on('scroll', $.throttle(50, refreshScroll));
+    $window.on('resize', $.throttle(250, refreshSize));
+
+    refreshSize();
+    refreshScroll();
+
+    return this;
+  };
+
+})(jQuery);
+
+/*
+ * jQuery throttle / debounce - v1.1 - 3/7/2010
+ * http://benalman.com/projects/jquery-throttle-debounce-plugin/
+ * 
+ * Copyright (c) 2010 "Cowboy" Ben Alman
+ * Dual licensed under the MIT and GPL licenses.
+ * http://benalman.com/about/license/
+ */
+(function(b, c) {
+  var $ = b.jQuery || b.Cowboy || (b.Cowboy = {}),
+    a;
+  $.throttle = a = function(e, f, j, i) {
+    var h, d = 0;
+    if (typeof f !== "boolean") {
+      i = j;
+      j = f;
+      f = c;
+    }
+
+    function g() {
+      var o = this,
+        m = +new Date() - d,
+        n = arguments;
+
+      function l() {
+        d = +new Date();
+        j.apply(o, n);
+      }
+
+      function k() {
+        h = c;
+      }
+      if (i && !h) {
+        l();
+      }
+      h && clearTimeout(h);// jshint ignore:line
+      if (i === c && m > e) {
+        l();
+      } else {
+        if (f !== true) {
+          h = setTimeout(i ? k : l, i === c ? e - m : e);
+        }
+      }
+    }
+    if ($.guid) {
+      g.guid = j.guid = j.guid || $.guid++;
+    }
+    return g;
+  };
+  $.debounce = function(d, e, f) {
+    return f === c ? a(d, e, false) : a(d, f, e !== false);
+  };
+})(this);
+
+// FILE: scripts/megaMenu.js
+(function($) {
+	$.fn.megaMenu = function() {
+		$('.folder-li li.dropdown').show(0);
+		$('.category-li').hide();
+		var width_array = [];
+		var current_folder_width = $('.folder-li').width();
+		$('.folder-li li.dropdown').each(function(key, val) {
+			width_array.push($(val).outerWidth());
+		});
+
+		function menu_set() {
+			var default_width = 150;
+			var total_width = $(window).width();
+			var logo_width = $('.navbar-header').width();
+			var other_nav_width = $('#other-navs').width();
+			var search_form_width = $('.search-form').width();
+			var category_width = $('.category-li').width();
+			var rest_width = total_width - (logo_width + other_nav_width + search_form_width);
+			var folder_width = rest_width - category_width;
+			var available_folder = 0;
+			if (current_folder_width > folder_width) {
+				var temp_folder_total = 0;
+				var stopFlag = false;
+				available_folder = 0;
+				width_array.forEach(function(width, k) {
+					if (!stopFlag) {
+						temp_folder_total += width;
+						if (temp_folder_total >= folder_width) {
+							available_folder = k - 1;
+							stopFlag = true;
+						}
+					}
+				});
+				//available_folder = Math.floor(folder_width/default_width);
+				$('.folder-li li.dropdown').each(function(key, val) {
+					if (key <= available_folder) {
+						$(val).show();
+					} else {
+						$(val).hide();
+					}
+				});
+				$('.category-li').show();
+				$('.megamenu .megamenu-item').each(function(key, val) {
+					if (key <= available_folder) {
+						$(val).hide();
+					} else {
+						$(val).show();
+					}
+				});
+
+			} else {
+				$('.folder-li li.dropdown').show();
+				$('.category-li').hide();
+			}
+			if(total_width < 768) {
+				adjust_searchbar();
+			}
+			footer_at_bottom();
+		}
+
+		function adjust_searchbar() {
+			var total_width = $(window).width();
+			var search_width = 300;
+			var right_margin = parseInt((total_width - search_width)/2);
+			$('.search-form').css('right', right_margin+'px');
+		}
+
+		function footer_at_bottom() {
+			var content_height = $(window).height() - $('.navbar').height() - $('.powered-by').height() - 30;
+			$('.docbase-main').css({'min-height': content_height+'px'});
+		}
+
+		menu_set();
+		$(window).resize(menu_set);
+	};
+}(jQuery));
+
+// FILE: scripts/searchAppbase.js
+(function($) {
+	$.fn.searchAppbase = function(searchIndexUrl, htmlMode) {
+		
+		//Create the search input element and insert it into html
+		var $search = $('<input>').attr({
+			'class':"search_field form-control dropdown-toggle",
+			'type':'text',
+			'placeholder':'search'
+		});
+		$(this).html($search);
+		$search.addClass('appbase-search');
+
+		function searchTag(data) {
+			var singleId = data.singleId;
+			var sectionId = singleId.substring(singleId.indexOf('"')+1, singleId.lastIndexOf('"'));
+			var filesplit = data.link.split('/');
+			var fileName = htmlMode ? filesplit[filesplit.length - 1].replace('.html','') : filesplit[filesplit.length - 2];
+			var link_part =  data.link.split('/');
+			data.version = link_part.length > 1 ? '<span class="result_record_version">'+link_part[1]+'</span>' : null;
+			data.folder = link_part.length > 2 ? '<span class="result_record_folder">'+fileName+'</span>' : null;
+			var	result_info = link_part.length > 1 ? $("<div>").addClass('result_record_info').append(data.folder).append(data.version) : null;	
+			var result_a = $('<a>').addClass('result_record_a pointer').attr({'link':data.link, 'sectionId':sectionId, 'spaLink': data.spaLink}).text(data.title).append(result_info);
+			var result_div = $('<div>').addClass('result_record').append(result_a);
+			result_a.on('click',function(){
+				gotoLink(this);
+			});
+			return result_div;
+		}
+		var fail = function(e) {
+			console.error("Your search index wasn't loaded, please check the following error", e);
+		};
+		var success = function(searchData) {
+			searchData.forEach(function(searchSingle) {
+				var content = searchSingle.content;
+				searchSingle.singleId = content.substring(content.indexOf('<'), content.indexOf('>'));
+				searchSingle.content = content.replace(/<\/?[^>]+(>|$)/g, " ");
+			});
+
+			var posts = new Bloodhound({
+				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title', 'content'),
+				queryTokenizer: Bloodhound.tokenizers.whitespace,
+				local: searchData
+			});
+
+			$search.typeahead({
+				minLength: 1
+			}, {
+				name: 'titles',
+				displayKey: 'title',
+				source: posts,
+				templates: {
+					pending: true,
+					suggestion: function(data) {
+						if (data) {
+							var single_record = searchTag(data);
+							return single_record;
+						} else
+							return;
+					}
+				}
+			});
+
+			// $search.bind('typeahead:select', function(ev, suggestion) {
+			// 	window.location.href = suggestion.link;
+			// });
+			$search.bind('typeahead:open', function(ev, suggestion) {
+				$search.parents('.search-form').addClass('open');
+			});
+			$search.bind('typeahead:close', function(ev, suggestion) {
+				$search.parents('.search-form').removeClass('open');
+			});
+			$search.on('keyup', function() {
+				var searchText = $(this).val();
+				$('.content').removeHighlight().highlight(searchText);
+			});
+			setQueryText();
+		};
+		//goto page with query string
+		var gotoLink = function(eve) {
+			var linkMode = htmlMode ? $(eve).attr('link') : $(eve).attr('spaLink'); 
+			var fullLink = linkMode+'?q='+$search.val()+'#'+$(eve).attr('sectionId');
+			window.location.href = fullLink;
+		};
+		//set initial higlhight according to previous page query
+		var setQueryText = function(){
+			var winhref = window.location.href;
+			if(winhref.indexOf('?q=') != -1){
+				var queryText = winhref.substring(winhref.indexOf('?q=')+3,winhref.lastIndexOf('#')).replace(/%20/g,' ');
+				$search.val(queryText);
+				$search.trigger('keyup');
+			}
+		};
+		//Fetch search index json data
+		var intializeCall = function() {
+			$.get(searchIndexUrl)
+				.then(success)
+				.fail(fail);
+		};
+
+		//Load typeahead.js
+		var Loader = function() {};
+		Loader.prototype = {
+			require: function(scripts, callback) {
+				this.loadCount = 0;
+				this.totalRequired = scripts.length;
+				this.callback = callback;
+
+				for (var i = 0; i < scripts.length; i++) {
+					var split_name = scripts[i].split('.');
+					if (split_name[split_name.length - 1] == 'js')
+						this.writeScript(scripts[i]);
+					if (split_name[split_name.length - 1] == 'css')
+						this.writeStylesheet(scripts[i]);
+				}
+			},
+			loaded: function(evt) {
+				this.loadCount++;
+
+				if (this.loadCount == this.totalRequired && typeof this.callback == 'function') this.callback.call();
+			},
+			writeScript: function(src) {
+				var self = this;
+				var s = document.createElement('script');
+				s.type = "text/javascript";
+				s.async = true;
+				s.src = src;
+				s.addEventListener('load', function(e) {
+					self.loaded(e);
+				}, false);
+				var head = document.getElementsByTagName('head')[0];
+				head.appendChild(s);
+			},
+			writeStylesheet: function(src) {
+				var self = this;
+				var s = document.createElement('link');
+				s.type = "text/css";
+				s.rel = "stylesheet";
+				s.href = src;
+				s.addEventListener('load', function(e) {
+					self.loaded(e);
+				}, false);
+				var head = document.getElementsByTagName('head')[0];
+				head.appendChild(s);
+			}
+		};
+
+		var jquery_js = new Loader();
+		jquery_js.require([
+				"http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"
+			],
+			function() {
+				intializeCall();
+			});
+
+	};
+}(jQuery));
+
+(function($) {
+	$.fn.highlight = function(pat) {
+		var successCount = 0;
+		function innerHighlight(node, pat) {
+			var skip = 0;
+			if (node.nodeType == 3) {
+				var pos = node.data.toUpperCase().indexOf(pat);
+				if (pos >= 0) {
+					successCount++;
+					var spannode = document.createElement('span');
+					spannode.className = 'highlight';
+					var middlebit = node.splitText(pos);
+					var endbit = middlebit.splitText(pat.length);
+					var middleclone = middlebit.cloneNode(true);
+					spannode.appendChild(middleclone);
+					middlebit.parentNode.replaceChild(spannode, middlebit);
+					skip = 1;
+				}
+			} else if (node.nodeType == 1 && node.childNodes && !/(script|style)/i.test(node.tagName)) {
+				for (var i = 0; i < node.childNodes.length; ++i) {
+					if(successCount > 100) {
+						break;
+					}
+					i += innerHighlight(node.childNodes[i], pat);
+				}
+			}
+			return skip;
+		}
+		return this.length && pat && pat.length ? this.each(function() {
+			innerHighlight(this, pat.toUpperCase());
+		}) : this;
+	};
+}(jQuery));
+
+(function($) {
+	$.fn.removeHighlight = function() {
+		return $(this).find('span.highlight').each(function(){
+		   $(this).replaceWith($(this).text());     
+		}).end().each(function() {
+		    this.normalize();
+		});
+	};
+}(jQuery));
