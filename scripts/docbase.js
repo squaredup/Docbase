@@ -414,7 +414,7 @@
 			if(markdown.substr(0, 3) === "---") { //yaml found
 				var split = markdown.split("---");
 				var keywords = "<yaml>" + split[0] + split[1] + "</yaml>"; //hide yaml in div, so still found by search indexer... hmmmm.
-				markdown = split[2].trim() + keywords;
+				markdown = split.splice(2, split.length).join("---").trim() + keywords;
 			}
 			  
             markdown = markdown.split('\n');
