@@ -375,6 +375,7 @@
         retObj.versions = versions;
         retObj.currentVersion = currentVersion || versions[versions.length - 1];
         retObj.map = map;
+		retObj.frontPageMap = Docbase.options.frontPageMap || map; //custom front page map or use default
         retObj.locationPath = location.path;
 
         //If index file
@@ -496,6 +497,7 @@
       $scope.versions = data.versions;
       $scope.currentVersion = data.currentVersion;
       $scope.map = data.map;
+	  $scope.frontPageMap = Docbase.options.frontPageMap;
       $scope.github = data.github;
       $scope.navbarHtml = Docbase.options.navbarHtml;
       $scope.logoSrc = Docbase.options.logoSrc;
@@ -509,6 +511,7 @@
 	  
       function versionIn(folder) {
         if (folder.name === data.currentFolder) {
+			$scope.folderLabel = folder.label;
           $scope.indexList = folder.files;
 		  return;//find first match (should really check exact path match)
         }
@@ -568,6 +571,7 @@
           $rootScope.navbarHtml = Docbase.options.navbarHtml;
           $rootScope.logoSrc = Docbase.options.logoSrc;
           $scope.map = Docbase.map;
+		  $scope.frontPageMap = Docbase.options.frontPageMap;
           $scope.versions = Object.keys($scope.map);
           $scope.currentVersion = $scope.docbaseOptions.default_version && $scope.docbaseOptions.default_version !== null && $scope.docbaseOptions.default_version !== '' ? $scope.docbaseOptions.default_version: $scope.versions[0];
           $scope.title = $scope.docbaseOptions.title;
@@ -603,6 +607,7 @@
           $rootScope.navbarHtml = Docbase.options.navbarHtml;
           $rootScope.logoSrc = Docbase.options.logoSrc;
           $scope.map = Docbase.map;
+		  $scope.frontPageMap = Docbase.options.frontPageMap;
           $scope.versions = Object.keys($scope.map);
           $scope.currentVersion = $route.current.params.version;
           setTimeout(function(){
