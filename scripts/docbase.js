@@ -555,6 +555,7 @@
 
   Route.mainCtrl = function($scope, $location, $timeout, $rootScope) {
     $scope.docbaseOptions = Docbase.options;
+	$scope.frontPageMap = Docbase.options.frontPageMap;
     if (Docbase.options.indexType === 'markdown') {
       var path = Docbase.options.indexSrc;
       if (endsWith(path, '.md')) {
@@ -591,6 +592,7 @@
   };
   Route.VersionCtrl = function($scope, $route, $location, $filter, $timeout, $rootScope) {
     $scope.docbaseOptions = Docbase.options;
+	$scope.frontPageMap = Docbase.options.frontPageMap;
     if (Docbase.options.indexType === 'markdown') {
       var path = Docbase.options.indexSrc;
       if (endsWith(path, '.md')) {
