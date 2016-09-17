@@ -1317,61 +1317,8 @@
 				.then(success)
 				.fail(fail);
 		};
-
-		//Load typeahead.js
-		var Loader = function() {};
-		Loader.prototype = {
-			require: function(scripts, callback) {
-				this.loadCount = 0;
-				this.totalRequired = scripts.length;
-				this.callback = callback;
-
-				for (var i = 0; i < scripts.length; i++) {
-					var split_name = scripts[i].split('.');
-					if (split_name[split_name.length - 1] == 'js')
-						this.writeScript(scripts[i]);
-					if (split_name[split_name.length - 1] == 'css')
-						this.writeStylesheet(scripts[i]);
-				}
-			},
-			loaded: function(evt) {
-				this.loadCount++;
-
-				if (this.loadCount == this.totalRequired && typeof this.callback == 'function') this.callback.call();
-			},
-			writeScript: function(src) {
-				var self = this;
-				var s = document.createElement('script');
-				s.type = "text/javascript";
-				s.async = true;
-				s.src = src;
-				s.addEventListener('load', function(e) {
-					self.loaded(e);
-				}, false);
-				var head = document.getElementsByTagName('head')[0];
-				head.appendChild(s);
-			},
-			writeStylesheet: function(src) {
-				var self = this;
-				var s = document.createElement('link');
-				s.type = "text/css";
-				s.rel = "stylesheet";
-				s.href = src;
-				s.addEventListener('load', function(e) {
-					self.loaded(e);
-				}, false);
-				var head = document.getElementsByTagName('head')[0];
-				head.appendChild(s);
-			}
-		};
-
-		var jquery_js = new Loader();
-		jquery_js.require([
-				"http://twitter.github.io/typeahead.js/releases/latest/typeahead.bundle.js"
-			],
-			function() {
-				intializeCall();
-			});
+		
+		intializeCall();
 
 	};
 }(jQuery));
