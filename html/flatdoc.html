@@ -27,7 +27,7 @@
 		</div>	
 		
 		<script type="text/ng-template" id="link_renderer.html">
-			<a href="{{path}}/{{file.files ? file.name + '/index' : file.name}}" class="col-xs-12"> {{file.label || file.name}}</a>
+			<a href="{{path}}/{{file.files ? file.name + '/index' : file.name}}" class="col-xs-12"><i class="fa {{file.files ? 'fa-folder' : 'fa-file-text'}}"></i>{{file.label || file.name}}</a>
 			<ul class="col-sm-12" ng-init="current=file">
 				<li ng-repeat="(key, file) in file.files" ng-include="'link_renderer.html'" ng-init="path=path +'/' + current.name"></li>
 			</ul>
