@@ -2,7 +2,8 @@ module.exports = function(grunt) {
 	var srcPath = ["scripts/**/*.js"];
 	var stylePath = ["styles/main.css", "styles/docs.css"];
 	var testePath = "spec/*Spec.js";
-	var libPaths = ['polyfills/polyfill.js', 'bower_components/jquery/dist/jquery.min.js', 'bower_components/flatdoc/legacy.js', 'bower_components/flatdoc/flatdoc.js', 'scripts/flatdoc-theme.js', 'bower_components/angular/angular.js', 'bower_components/angular-route/angular-route.js', 'bower_components/angular-sanitize/angular-sanitize.min.js', 'bower_components/js-schema/js-schema.min.js', 'bower_components/google-code-prettify/bin/prettify.min.js', 'bower_components/bootstrap/dist/js/bootstrap.min.js', 'bower_components/typeahead.js/dist/typeahead.jquery.min.js', 'bower_components/typeahead.js/dist/bloodhound.min.js'];
+	var libPaths = ['polyfills/polyfill.js', 'bower_components/jquery/dist/jquery.min.js', 'bower_components/flatdoc/legacy.js', 'bower_components/flatdoc/flatdoc.js', 'scripts/flatdoc-theme.js', 'bower_components/angular/angular.js', 'bower_components/angular-route/angular-route.js', 'bower_components/angular-sanitize/angular-sanitize.min.js', 'bower_components/js-schema/js-schema.min.js', 'bower_components/google-code-prettify/bin/prettify.min.js', 'bower_components/bootstrap/dist/js/bootstrap.min.js', 'bower_components/typeahead.js/dist/typeahead.jquery.min.js', 'bower_components/typeahead.js/dist/bloodhound.min.js', 'bower_components/lunr.js/lunr.js'];
+
 	grunt.initConfig({
 		concat: {
 			default: {

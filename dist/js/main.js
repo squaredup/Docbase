@@ -361,7 +361,7 @@
     $rootScope.$on("$includeContentLoaded", function(event, templateName) {
       if ($.fn.searchAppbase && Docbase.options.useSearch) {
         //passing false as Htmlmode : false
-        $('.search-form').searchAppbase(Docbase.options.searchIndexUrl, false);
+        $('.search-form').searchAppbase(Docbase.options.searchIndexUrl);
       }
     });
 
@@ -1220,8 +1220,9 @@
 
 // FILE: scripts/searchAppbase.js
 (function($) {
-	$.fn.searchAppbase = function(searchIndexUrl, htmlMode) {
+	$.fn.searchAppbase = function(searchIndexUrl) {
 		
+		var searchIndex, searchStore;
 		//Create the search input element and insert it into html
 		var $search = $('<input>').attr({
 			'class':"search_field form-control dropdown-toggle",
@@ -1231,75 +1232,62 @@
 		$(this).html($search);
 		$search.addClass('appbase-search');
 
-		function searchTag(data) {
-			var singleId = data.singleId;
-			var sectionId = singleId.substring(singleId.indexOf('"')+1, singleId.lastIndexOf('"'));
-			var filesplit = data.link.split('/');
-			var fileName = htmlMode ? filesplit[filesplit.length - 1].replace('.html','') : filesplit[filesplit.length - 2];
-			var link_part =  data.link.split('/');
-			data.version = link_part.length > 1 ? '<span class="result_record_version">'+link_part[1]+'</span>' : null;
-			data.folder = link_part.length > 2 ? '<span class="result_record_folder">'+fileName+'</span>' : null;
-			var	result_info = link_part.length > 1 ? $("<div>").addClass('result_record_info').append(data.folder).append(data.version) : null;	
-			var result_a = $('<a>').addClass('result_record_a pointer').attr({'link':data.link, 'sectionId':sectionId, 'spaLink': data.spaLink}).text(data.title).append(result_info);
-			var result_div = $('<div>').addClass('result_record').append(result_a);
-			result_a.on('click',function(){
+		function buildSearchResult(item, ref) {
+			var linkEl = $('<a>').addClass('result_record_a pointer').attr({'link':ref}).text(item.title);
+			var resultEl = $('<div>').addClass('result_record').append(linkEl);
+			resultEl.on('click',function(){
 				gotoLink(this);
 			});
-			return result_div;
+			return resultEl;
 		}
 		var fail = function(e) {
 			console.error("Your search index wasn't loaded, please check the following error", e);
 		};
-		var success = function(searchData) {
-			searchData.forEach(function(searchSingle) {
-				var content = searchSingle.content;
-				searchSingle.singleId = content.substring(content.indexOf('<'), content.indexOf('>'));
-				searchSingle.content = content.replace(/<\/?[^>]+(>|$)/g, " ");
-			});
+		var success = function(serialized) {
+			if(serialized.index) {
+				searchIndex = lunr.Index.load(serialized.index);
+				searchStore = serialized.store;
+				
+				$search.typeahead({
+					minlength: 1
+				}, {
+					name: 'titles',
+					displaykey: 'title',
+					source: function(query, cb) {
+						cb(searchIndex.search(query));
+					},
+					templates: {
+						pending: true,
+						suggestion: function(data) {
+							if (data) {
+								var item = searchStore[data.ref]; //get details about the found item
+								return buildSearchResult(item, data.ref); //build up single result
+							} else
+								return;
+						}
+					},
+					limit: 10
+				});
 
-			var posts = new Bloodhound({
-				datumTokenizer: Bloodhound.tokenizers.obj.whitespace('title', 'content'),
-				queryTokenizer: Bloodhound.tokenizers.whitespace,
-				local: searchData
-			});
-
-			$search.typeahead({
-				minLength: 1
-			}, {
-				name: 'titles',
-				displayKey: 'title',
-				source: posts,
-				templates: {
-					pending: true,
-					suggestion: function(data) {
-						if (data) {
-							var single_record = searchTag(data);
-							return single_record;
-						} else
-							return;
-					}
-				}
-			});
-
-			// $search.bind('typeahead:select', function(ev, suggestion) {
-			// 	window.location.href = suggestion.link;
-			// });
-			$search.bind('typeahead:open', function(ev, suggestion) {
-				$search.parents('.search-form').addClass('open');
-			});
-			$search.bind('typeahead:close', function(ev, suggestion) {
-				$search.parents('.search-form').removeClass('open');
-			});
-			$search.on('keyup', function() {
-				var searchText = $(this).val();
-				$('.content').removeHighlight().highlight(searchText);
-			});
-			setQueryText();
+				$search.bind('typeahead:open', function(ev, suggestion) {
+					$search.parents('.search-form').addClass('open');
+				});
+				$search.bind('typeahead:close', function(ev, suggestion) {
+					$search.parents('.search-form').removeClass('open');
+				});
+				$search.on('keyup', function() {
+					var searchtext = $(this).val();
+					$('.content').removeHighlight().highlight(searchtext);
+				});
+				setQueryText();		
+			} else {
+				fail();
+			}
 		};
 		//goto page with query string
 		var gotoLink = function(eve) {
-			var linkMode = htmlMode ? $(eve).attr('link') : $(eve).attr('spaLink'); 
-			var fullLink = linkMode+'?q='+$search.val()+'#'+$(eve).attr('sectionId');
+			var linkMode = $(eve).attr('link');
+			var fullLink = linkMode+'?q='+$search.val();
 			window.location.href = fullLink;
 		};
 		//set initial higlhight according to previous page query
