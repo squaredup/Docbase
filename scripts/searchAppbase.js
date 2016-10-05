@@ -13,7 +13,7 @@
 
 		function buildSearchResult(item, ref) {
 			var linkEl = $('<a>').addClass('result_record_a pointer').attr({'link':ref}).text(item.title);
-			var resultEl = $('<div>').addClass('result_record').append(linkEl);
+			var resultEl = $('<div>').addClass('result_record').attr({'link':ref}).append(linkEl);
 			resultEl.on('click',function(){
 				gotoLink(this);
 			});
@@ -31,7 +31,11 @@
 					minlength: 1
 				}, {
 					name: 'titles',
-					displaykey: 'title',
+					display: function(selected) {
+						if(selected) {
+							return searchStore[selected.ref].title;
+						}
+					},
 					source: function(query, cb) {
 						cb(searchIndex.search(query));
 					},
@@ -73,7 +77,7 @@
 		var setQueryText = function(){
 			var winhref = window.location.href;
 			if(winhref.indexOf('?q=') != -1){
-				var queryText = winhref.substring(winhref.indexOf('?q=')+3,winhref.lastIndexOf('#')).replace(/%20/g,' ');
+				var queryText = winhref.substring(winhref.indexOf('?q=')+3, (winhref.lastIndexOf('#') == -1 ? winhref.length : winhref.lastIndexOf('#'))).replace(/%20/g,' ');
 				$search.val(queryText);
 				$search.trigger('keyup');
 			}
