@@ -3,7 +3,7 @@
   "version": "1.8.1",
   "homepage": "https://github.com/squaredup/Docbase",
   "authors": [
-	"Dave Clarke <dave.clarke@squaredup.com>",
+    "Dave Clarke <dave.clarke@squaredup.com>",
     "Henrique Sa <henriquepss@gmail.com>",
     "Mateus Freira <mateus.freira@gmail.com>"
   ],
@@ -25,6 +25,7 @@
     "google-code-prettify": "~1.0.4",
     "js-schema": "~0.7.2",
     "font-awesome": "~4.5.0",
-    "angular-sanitize": "^1.5.3"
+    "angular-sanitize": "^1.5.3",
+    "lunr.js": "lunr#^0.7.1"
   }
 }
